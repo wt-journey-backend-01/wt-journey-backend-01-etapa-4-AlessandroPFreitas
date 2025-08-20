@@ -62,7 +62,7 @@ jobs:
 
     
       - name: Check repository criteria
-        uses: webtech-network/autograder@etapa-3
+        uses: webtech-network/autograder@etapa-4
         with:
           JWT_TOKEN: ${{ secrets.JWT_SECRET }}
           autograder_bot_token: ${{ steps.generate_app_token.outputs.token }} 

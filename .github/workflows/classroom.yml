@@ -64,7 +64,7 @@ jobs:
       - name: Check repository criteria
         uses: webtech-network/autograder@etapa-4
         with:
-          JWT_TOKEN: ${{ secrets.JWT_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
           autograder_bot_token: ${{ steps.generate_app_token.outputs.token }} 
           redis_name: ${{ secrets.REDIS_NAME }}
           redis_url: ${{ secrets.REDIS_URL }}

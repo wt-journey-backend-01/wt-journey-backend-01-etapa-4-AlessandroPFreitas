@@ -1,4 +1,3 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/rskcst-g)
 # Etapa 4: Segurança, Autenticação e Aplicação Completa em Node.js
 
 ## 🧩 Contexto
@@ -101,6 +100,16 @@ No arquivo **INSTRUCTIONS.md**, incluir:
   ```
 - Caso o email do login já esteja em uso, **status code 400 BAD REQUEST**
 - Caso o acess token seja inválido, **status code 401 Unauthorized**
+
+### Importante
+- Para gerenciar o segredo do seu JWT, utilize a seguinte variável de ambiente:
+
+```.env
+...
+JWT_SECRET="segredo aqui"
+```
+
+- NUNCA insira seus segredos diretamente no código, pois essa é uma brecha crítica de segurança, além de interferir com o funcionamento dos testes.
 
 ## 💡 Bônus 🌟
 - Implementar **refresh tokens** para prolongar sessões de forma segura.

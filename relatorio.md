@@ -1,24 +1,34 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 1 créditos restantes para usar o sistema de feedback AI.
+Você tem 9 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para gnvr29:
 
 Nota final: **60.5/100**
 
-Olá, gnvr29! 👋🚀
+# Feedback para você, gnvr29! 🚀👮‍♂️
 
-Primeiramente, parabéns pelo esforço e pelo que você já entregou até aqui! 🎉 Seu código mostra um bom domínio do Express.js, do Knex.js e da organização em controllers, repositories e rotas — a modularidade está bem feita, o que é fundamental para projetos escaláveis. Também curti o uso correto de validações e tratamento de erros, além da implementação dos filtros e ordenações básicas. Isso mostra que você está no caminho certo! 👏
+Olá! Primeiro, quero te parabenizar pelo esforço e pelo código que você compartilhou. Você já conseguiu implementar muitas funcionalidades importantes da API, especialmente a integração com o banco de dados PostgreSQL usando Knex.js, além de manter uma arquitetura modular muito boa com controllers, repositories e rotas. Isso é essencial para um projeto escalável e organizado. 👏👏
+
+Além disso, notei que você implementou filtros simples para os casos e agentes, como filtragem por status e agente responsável, o que é um excelente passo para deixar a API mais flexível. Também cuidou muito bem das validações e dos retornos HTTP, garantindo respostas claras para o cliente. Isso mostra que você está preocupado com a experiência do usuário da sua API, o que é ótimo! 🎯
 
 ---
 
-## Vamos juntos destrinchar o que pode ser melhorado para você avançar ainda mais! 🕵️‍♂️🔍
+## Vamos analisar juntos alguns pontos que podem ser melhorados para deixar seu projeto ainda mais robusto e alinhado com as expectativas do desafio. 🕵️‍♂️
 
-### 1. Sobre a Estrutura de Diretórios e Organização do Projeto
+---
 
-Eu dei uma olhada na estrutura do seu projeto e percebi que, apesar de estar quase lá, ela não está 100% alinhada com o que é esperado para este desafio. Por exemplo, notei que você tem a pasta `db/` com os arquivos de migrations, seeds e o `db.js`, o que é ótimo. Também tem as pastas `controllers/`, `repositories/` e `routes/`, ok.
+## 1. Sobre a Estrutura de Diretórios
 
-Porém, a penalidade indica que a estrutura não seguiu à risca o padrão esperado. Isso pode estar relacionado a arquivos ou pastas faltando, ou até nomes que não batem exatamente. A estrutura esperada é esta:
+Eu dei uma olhada na estrutura do seu projeto e percebi que você tem a maioria dos arquivos no lugar certo, mas notei que a pasta `utils` contém apenas o arquivo `errorHandler.js`, que parece estar vazio (não foi enviado no código). Além disso, seu `.gitignore` não está incluindo a pasta `node_modules`, o que pode causar problemas no versionamento e no tamanho do repositório.
+
+**Por que isso importa?**  
+Seguir a estrutura padrão e boas práticas de organização ajuda a manter o projeto limpo, facilita a manutenção e a colaboração, além de evitar problemas com arquivos desnecessários no controle de versão.
+
+**O que fazer?**  
+- Verifique seu `.gitignore` e adicione a linha `node_modules/` para ignorar essa pasta.  
+- Certifique-se que seu arquivo `utils/errorHandler.js` está implementado ou remova se não for usar.  
+- Mantenha a estrutura conforme abaixo para evitar confusões futuras:
 
 ```
 📦 SEU-REPOSITÓRIO
@@ -49,63 +59,40 @@ Porém, a penalidade indica que a estrutura não seguiu à risca o padrão esper
     └── errorHandler.js
 ```
 
-Por exemplo, eu não vi o arquivo `utils/errorHandler.js` no seu projeto. Esse arquivo é importante para centralizar o tratamento de erros e manter seu código limpo. Além disso, pequenos detalhes na nomenclatura e localização dos arquivos podem impactar a manutenção e a execução dos testes.
-
-**Dica:** siga exatamente a estrutura acima para evitar problemas futuros e para que seu projeto fique mais organizado e profissional.
-
-Para entender melhor a importância da arquitetura MVC e organização, recomendo muito este vídeo:  
-👉 [Arquitetura MVC em Node.js](https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH)
+Para entender melhor a arquitetura MVC e organização de arquivos, recomendo muito este vídeo:  
+👉 https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH
 
 ---
 
-### 2. Problemas com Atualização via PUT: Alteração Indevida do ID
+## 2. Problema Fundamental: Validação e Atualização do ID dos Recursos
 
-Um ponto crítico que observei no seu código é que, nos métodos PUT tanto para agentes quanto para casos, você não está protegendo o campo `id` contra alterações. Isso é uma questão de validação e integridade dos dados — o `id` é a chave primária e não deve ser alterado pelo cliente!
+Eu percebi que você permite alterar o campo `id` tanto para agentes quanto para casos via método PUT, o que não é uma prática recomendada e foi identificado como um problema.
 
-Por exemplo, no `agentesController.js`, no método `putAgente`:
+Por exemplo, no seu controller `agentesController.js` no método `putAgente`, você aceita o corpo inteiro do recurso para atualização, porém não há nenhuma proteção para impedir que o campo `id` seja alterado:
 
 ```js
-async function putAgente(req, res) {
-  // ...
-  const { nome, dataDeIncorporacao, cargo } = req.body;
-  // id não é extraído nem validado para impedir alteração
-  const agente = {
-    nome,
-    dataDeIncorporacao,
-    cargo,
-  };
-  // ...
-}
+const { nome, dataDeIncorporacao, cargo } = req.body;
+// O campo id não está sendo filtrado nem bloqueado
+const agente = {
+  nome,
+  dataDeIncorporacao,
+  cargo,
+};
 ```
 
-Aqui, se o cliente enviar um payload com um campo `id`, ele será ignorado, mas o ideal é validar e rejeitar essa tentativa, pois isso pode causar inconsistências.
+O mesmo acontece em `putCaso` no `casosController.js`.
 
-O mesmo acontece no `casosController.js`, no método `putCaso`:
+**Por que isso é um problema?**  
+O `id` é a chave primária do recurso no banco de dados e deve ser imutável. Permitir sua alteração pode causar inconsistências, problemas de integridade referencial e falhas na aplicação.
 
-```js
-async function putCaso(req, res) {
-  // ...
-  const { titulo, descricao, status, agente_id } = req.body;
-  // Sem validação para impedir alteração do 'id'
-  const newCaso = {
-    titulo,
-    descricao,
-    status,
-    agente_id,
-  };
-  // ...
-}
-```
-
-**Como corrigir?**
-
-- No método PUT, rejeite qualquer tentativa de alteração do campo `id`, retornando um erro 400 com uma mensagem clara.
-- Outra abordagem é simplesmente garantir que o campo `id` não seja aceito no corpo da requisição.
-
-Exemplo de validação simples:
+**Como corrigir?**  
+Você deve ignorar ou bloquear o campo `id` no corpo da requisição para PUT e PATCH, garantindo que ele nunca seja alterado. Por exemplo:
 
 ```js
-if ('id' in req.body) {
+// No putAgente, desestruture apenas os campos permitidos, ignore o id
+const { nome, dataDeIncorporacao, cargo, id: _id, ...rest } = req.body;
+// Ou explicitamente não permita id no corpo
+if (req.body.id) {
   return res.status(400).json({
     status: 400,
     message: "O campo 'id' não pode ser alterado",
@@ -113,209 +100,262 @@ if ('id' in req.body) {
 }
 ```
 
-Esse cuidado evita bugs difíceis e mantém a integridade dos dados no banco.
-
-Para aprofundar na validação e tratamento de erros, recomendo:  
-👉 [Validação de dados e tratamento de erros em APIs](https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_)
+Faça o mesmo para o `putCaso` e `patch` dos dois recursos.
 
 ---
 
-### 3. Falha na Criação de Agentes com POST
+## 3. Falha na Criação Completa de Agentes (POST) e Atualização Completa (PUT)
 
-Você mencionou que a criação de agentes (`POST /agentes`) está falhando. Ao analisar seu código, eu percebo que o problema pode estar relacionado ao campo `nome` ser único na tabela, conforme a migration:
+Você mencionou que a criação de agentes com POST e atualização completa com PUT estão falhando. Vamos entender por quê.
+
+No seu migration `agentes.js`, o campo `nome` está com `.unique()`, ou seja, não pode haver dois agentes com o mesmo nome no banco.
 
 ```js
 table.string("nome").notNullable().unique();
 ```
 
-Se você tentar inserir um agente com um nome que já existe, o banco vai rejeitar a operação — e seu código não está tratando explicitamente esse erro de violação de unicidade, o que pode causar falhas.
+No seu seed `agentes.js`, você insere dois agentes com nomes diferentes, o que está correto.
 
-Além disso, no seu seed de agentes, você está deletando os casos antes dos agentes:
+No entanto, no seu controller `postAgente`, você não está validando se o nome já existe antes de tentar inserir. Se tentar inserir um agente com nome duplicado, o banco vai rejeitar e o erro pode não estar sendo tratado corretamente.
+
+Além disso, no seu repository `createAgente` você faz:
 
 ```js
-await knex('casos').del(); // depende de agentes
-await knex('agentes').del();
+const [row] = await knex("agentes").insert(agente).returning("*");
+if (row) return row;
+// fallback
+return await knex("agentes").where({ nome: agente.nome }).first();
 ```
 
-Aqui tem um problema de ordem: como a tabela `casos` depende da tabela `agentes` (chave estrangeira), você deve deletar os casos **antes** dos agentes para não ter erro de restrição. Seu código está correto nesse sentido, mas vale reforçar que a ordem é importante.
+Se o `returning("*")` falhar (por exemplo, em versões antigas do PostgreSQL), você busca pelo nome. Isso é ok, mas se o nome for duplicado, isso pode gerar comportamento inesperado.
 
-**Outra hipótese importante:** certifique-se que as migrations foram rodadas corretamente antes de executar os seeds. Se as tabelas não existirem, o insert vai falhar.
+**O que pode estar causando a falha?**  
+- Tentar criar agentes com nomes já existentes gera erro de banco que não está sendo tratado.  
+- Falta de tratamento específico para erros de violação de unicidade.
 
-**Verifique também seu `.env` e a conexão do Knex** para garantir que o banco está acessível e que as credenciais estão corretas. Seu `knexfile.js` parece correto, mas se as variáveis de ambiente estiverem erradas, a conexão não vai funcionar.
+**Como melhorar?**  
+- Antes de criar, faça uma busca para verificar se o nome já existe e retorne um erro 400 com mensagem amigável.  
+- Adicione um tratamento de erro no bloco catch para capturar erros do banco referentes a duplicidade.
 
-Se ainda não rodou as migrations, faça:
+Exemplo no controller:
+
+```js
+const existingAgente = await agentesRepository.findByName(nome);
+if (existingAgente) {
+  return res.status(400).json({
+    status: 400,
+    message: "Parâmetros inválidos",
+    errors: { nome: "Já existe um agente com este nome" },
+  });
+}
+```
+
+E no repository, implemente:
+
+```js
+async function findByName(nome) {
+  return await knex("agentes").where({ nome }).first();
+}
+```
+
+---
+
+## 4. Falha ao Buscar Caso por ID Inválido (Status 404)
+
+No seu controller `casosController.js` para o método `getCasoId`, você faz:
+
+```js
+const caso = await casosRepository.findById(id);
+if (!caso) {
+  return res.status(404).json({
+    status: 404,
+    message: "Caso não encontrado",
+  });
+}
+res.status(200).json(caso);
+```
+
+Isso está correto, mas é importante garantir que o `id` recebido seja um número válido para evitar erros inesperados na query.
+
+**Sugestão:**  
+Antes de buscar, valide se o `id` é um número inteiro positivo. Se não for, retorne 400.
+
+Exemplo:
+
+```js
+const idNum = Number(id);
+if (!Number.isInteger(idNum) || idNum <= 0) {
+  return res.status(400).json({
+    status: 400,
+    message: "ID inválido",
+  });
+}
+```
+
+Isso evita que a query ao banco faça buscas com valores errados e melhore o feedback para o cliente.
+
+---
+
+## 5. Filtros de Busca e Ordenação nos Agentes
+
+Você implementou filtros interessantes no endpoint `/agentes`, como filtro por cargo e ordenação por data de incorporação. Porém, notei que você faz o filtro e ordenação **em memória** após buscar todos os agentes do banco:
+
+```js
+let agentes = await agentesRepository.findAll();
+
+if (cargo) {
+  agentes = agentes.filter((agente) => agente.cargo === cargo);
+}
+
+// ordenação
+if (sort === "dataDeIncorporacao") {
+  agentes = agentes.sort(...);
+}
+```
+
+**Por que isso pode ser um problema?**  
+- Se o banco tiver muitos agentes, buscar todos e filtrar/ordenar no Node.js pode causar lentidão e desperdício de memória.  
+- O ideal é fazer o filtro e ordenação diretamente na query SQL, usando o Knex.
+
+**Como melhorar?**  
+Implemente os filtros e ordenação no repository, por exemplo:
+
+```js
+async function findAll({ cargo, sort }) {
+  let query = knex("agentes").select("*");
+
+  if (cargo) {
+    query = query.where("cargo", cargo);
+  }
+
+  if (sort === "dataDeIncorporacao") {
+    query = query.orderBy("dataDeIncorporacao", "asc");
+  } else if (sort === "-dataDeIncorporacao") {
+    query = query.orderBy("dataDeIncorporacao", "desc");
+  }
+
+  return await query;
+}
+```
+
+E no controller, passe os parâmetros para o repository.
+
+---
+
+## 6. Filtros de Busca por Palavra-Chave nos Casos (Bonus)
+
+Você tentou implementar a busca por palavra-chave (`q`) no endpoint `/casos`, mas fez isso filtrando os casos **após** buscar todos do banco:
+
+```js
+if (q) {
+  casos = casos.filter(
+    (caso) =>
+      caso.titulo.toLowerCase().includes(termo) ||
+      caso.descricao.toLowerCase().includes(termo)
+  );
+}
+```
+
+**Por que isso pode ser melhorado?**  
+- Fazer isso no banco usando o operador `ILIKE` traz muito mais performance e aproveita o poder do SQL para busca textual.  
+- Além disso, o filtro em memória não escala para grandes volumes de dados.
+
+**Como fazer?**  
+No repository `casosRepository.js`, crie um método que recebe o termo de busca e monta a query com `where` e `orWhere` usando `ILIKE` (case-insensitive):
+
+```js
+async function findAll({ agente_id, status, q }) {
+  let query = knex("casos").select("*");
+
+  if (agente_id) {
+    query = query.where("agente_id", agente_id);
+  }
+
+  if (status) {
+    query = query.where("status", status);
+  }
+
+  if (q) {
+    query = query.andWhere(function () {
+      this.where("titulo", "ilike", `%${q}%`).orWhere("descricao", "ilike", `%${q}%`);
+    });
+  }
+
+  return await query;
+}
+```
+
+Depois, no controller, apenas chame esse método passando os parâmetros.
+
+---
+
+## 7. Configuração do Banco de Dados e Migrations
+
+Seu `knexfile.js` e `db/db.js` parecem corretos, e você está usando variáveis de ambiente para conexão, o que é ótimo! 👍
+
+Só uma dica importante: sempre verifique se as migrations foram executadas corretamente antes de rodar a aplicação, pois a ausência das tabelas `agentes` e `casos` pode causar erros em todas as operações.
+
+Para isso, você pode rodar:
 
 ```bash
 npx knex migrate:latest
 npx knex seed:run
 ```
 
-Para entender melhor sobre migrations e seeds, recomendo:  
-👉 [Documentação oficial do Knex sobre Migrations](https://knexjs.org/guide/migrations.html)  
-👉 [Vídeo sobre Seeds com Knex](http://googleusercontent.com/youtube.com/knex-seeds)
+Se quiser entender melhor como configurar o ambiente com Docker e PostgreSQL, recomendo este vídeo que explica desde a criação do container até a conexão com o Node.js:  
+👉 http://googleusercontent.com/youtube.com/docker-postgresql-node
 
 ---
 
-### 4. Falha ao Receber 404 para Caso por ID Inválido
+## 8. Sobre as Penalidades Detectadas
 
-No seu controller de casos (`casosController.js`), o método `getCasoId` está assim:
-
-```js
-async function getCasoId(req, res) {
-  try {
-    const id = req.params.id;
-    const caso = await casosRepository.findById(id);
-    if (!caso) {
-      return res.status(404).json({
-        status: 404,
-        message: "Caso não encontrado",
-      });
-    }
-    res.status(200).json(caso);
-  } catch (error) {
-    res.status(500).json({
-      status: 500,
-      message: "Erro interno do servidor",
-    });
-  }
-}
-```
-
-Esse código está correto para retornar 404 quando o caso não existe. Se você está tendo falha nesse requisito, pode ser que o problema esteja na sua camada de repositório ou na query SQL.
-
-No `casosRepository.js`, o método `findById` é:
-
-```js
-async function findById(id) {
-  return await knex("casos").where({ id }).first();
-}
-```
-
-Aqui está ok, mas é importante garantir que o tipo do `id` seja coerente (por exemplo, número). Se o `id` vier como string e o banco não encontrar, o retorno será `undefined` mesmo assim.
-
-**Sugestão:** coloque log para verificar se o parâmetro `id` está chegando corretamente e se a query está sendo executada sem erros.
+- **Alteração do ID via PUT:** Já falamos, bloqueie o campo `id` na atualização.  
+- **`.gitignore` sem `node_modules`:** Ajuste seu `.gitignore` para evitar subir a pasta `node_modules`.  
+- **Estrutura de arquivos diferente do esperado:** Ajuste a organização para seguir o padrão do desafio, isso evita confusão e facilita a avaliação.
 
 ---
 
-### 5. Sobre os Filtros e Ordenações que Não Funcionam (Bônus)
+## Recapitulando o que você pode focar para melhorar 📝
 
-Você implementou filtros básicos para os casos e agentes, o que é ótimo! Porém, os filtros mais avançados, como busca por palavra-chave no título/descrição dos casos, e ordenação por data de incorporação dos agentes, não passaram.
-
-Ao analisar seu código no `agentesController.js`, você faz o filtro e ordenação assim:
-
-```js
-if (sort === "dataDeIncorporacao") {
-  agentes = agentes.sort(
-    (a, b) =>
-      new Date(a.dataDeIncorporacao) - new Date(b.dataDeIncorporacao)
-  );
-} else if (sort === "-dataDeIncorporacao") {
-  agentes = agentes.sort(
-    (a, b) =>
-      new Date(b.dataDeIncorporacao) - new Date(a.dataDeIncorporacao)
-  );
-}
-```
-
-Esse código funciona, mas você está fazendo a ordenação **em memória**, após já ter buscado todos os agentes do banco.
-
-O ideal, para escalabilidade e performance, é fazer essa ordenação diretamente na query SQL, usando o Knex, por exemplo:
-
-```js
-async function findAll({ cargo, sort }) {
-  let query = knex('agentes');
-
-  if (cargo) {
-    query = query.where('cargo', cargo);
-  }
-
-  if (sort === 'dataDeIncorporacao') {
-    query = query.orderBy('dataDeIncorporacao', 'asc');
-  } else if (sort === '-dataDeIncorporacao') {
-    query = query.orderBy('dataDeIncorporacao', 'desc');
-  }
-
-  return await query.select('*');
-}
-```
-
-Assim, você delega o filtro e ordenação para o banco, que é otimizado para isso.
-
-O mesmo vale para a busca por palavra-chave em `casosController.js`. Você está filtrando em memória:
-
-```js
-casos = casos.filter(
-  (caso) =>
-    caso.titulo.toLowerCase().includes(termo) ||
-    caso.descricao.toLowerCase().includes(termo)
-);
-```
-
-Isso pode ser melhorado fazendo a busca com `where` e `orWhere` no Knex, usando `ILIKE` para PostgreSQL:
-
-```js
-query.where('titulo', 'ilike', `%${termo}%`)
-  .orWhere('descricao', 'ilike', `%${termo}%`)
-```
-
-Fazer isso no banco evita trazer muitos dados para a aplicação e melhora a performance.
-
-Para entender melhor o Query Builder do Knex e como fazer filtros e ordenações, recomendo:  
-👉 [Knex Query Builder](https://knexjs.org/guide/query-builder.html)
+- 🚫 Bloquear alteração do campo `id` nos métodos PUT e PATCH para agentes e casos.  
+- ✅ Validar unicidade do campo `nome` ao criar agentes, com tratamento de erro amigável.  
+- 🔍 Validar o `id` recebido nas rotas para garantir que é um número válido.  
+- ⚡ Mover filtros e ordenações para dentro das queries SQL no repository, evitando filtragem em memória.  
+- 🔎 Implementar busca por palavra-chave (`q`) usando `ILIKE` no banco para casos.  
+- 🛠️ Garantir que as migrations e seeds estejam rodando corretamente antes de usar a API.  
+- 📁 Ajustar `.gitignore` para ignorar `node_modules`.  
+- 🏗️ Organizar a estrutura de arquivos conforme o padrão para facilitar manutenção e avaliação.
 
 ---
 
-### 6. Sobre as Penalidades com `.gitignore` e Estrutura
+## Para continuar evoluindo, aqui vão alguns recursos que vão te ajudar muito:
 
-Você recebeu uma penalidade porque o `.gitignore` não está ignorando a pasta `node_modules/`. Isso é importante para evitar que arquivos pesados e desnecessários sejam enviados para o repositório.
+- **Validação, tratamento de erros e status HTTP na API:**  
+  https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/400  
+  https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/404  
+  https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_
 
-No seu `.gitignore`, certifique-se de ter esta linha:
+- **Knex.js - Migrations e Query Builder:**  
+  https://knexjs.org/guide/migrations.html  
+  https://knexjs.org/guide/query-builder.html  
 
-```
-node_modules/
-```
+- **Configuração de Banco de Dados com Docker e Node.js:**  
+  http://googleusercontent.com/youtube.com/docker-postgresql-node  
 
-Assim você mantém seu repositório limpo e evita problemas.
-
----
-
-## Resumo dos Pontos para Você Focar e Melhorar 🚦
-
-- [ ] Ajuste a estrutura do projeto para seguir exatamente o padrão esperado, incluindo o arquivo `utils/errorHandler.js`.
-- [ ] Impeça a alteração do campo `id` nos métodos PUT para agentes e casos, validando e retornando erro 400 caso o cliente tente alterar.
-- [ ] Verifique se as migrations foram executadas e se o banco está configurado corretamente (variáveis de ambiente, conexão, etc.), para garantir que a criação e inserção de agentes funcione.
-- [ ] Melhore os filtros e ordenações para serem feitos diretamente nas queries SQL com Knex, não em memória.
-- [ ] Corrija o `.gitignore` para ignorar a pasta `node_modules/`.
-- [ ] Considere implementar um arquivo centralizado para tratamento de erros (`utils/errorHandler.js`) para manter o código limpo e evitar repetição.
-- [ ] Adicione logs ou console outputs para facilitar a depuração de erros, especialmente em consultas ao banco.
+- **Arquitetura MVC e organização de projetos Node.js:**  
+  https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH  
 
 ---
 
-## Para finalizar, parabéns pelo que você já conquistou! 🎉
+## Finalizando…
 
-Você já tem uma base muito sólida e já entregou funcionalidades importantes com boa qualidade, como validação, tratamento de erros, e modularização do código. É normal encontrar alguns detalhes para ajustar nessa etapa de migração para banco real — isso é parte do processo de aprendizado e crescimento.
+Você já está com uma base muito boa e organizada, e com alguns ajustes importantes, sua API vai ficar muito mais sólida, eficiente e alinhada com as boas práticas do mercado! 💪✨
 
-Continue focando na organização, na qualidade das queries SQL e na proteção dos dados da sua API. Tenho certeza que com esses ajustes seu projeto vai ficar muito mais robusto e pronto para produção! 💪
+Continue explorando, testando e aprimorando seu código. Cada detalhe que você melhora é um passo gigante na sua jornada como desenvolvedor backend.
 
-Se precisar, volte aos recursos que recomendei para aprofundar conceitos e boas práticas.
+Se precisar, estou aqui para ajudar! Vamos juntos nessa! 🚓👨‍💻
 
-Qualquer dúvida, estou aqui para ajudar! 🚀👨‍💻
-
----
-
-### Recursos recomendados para você revisar:
-
-- [Configuração de Banco de Dados com Docker e Knex](http://googleusercontent.com/youtube.com/docker-postgresql-node)  
-- [Knex Migrations](https://knexjs.org/guide/migrations.html)  
-- [Knex Query Builder](https://knexjs.org/guide/query-builder.html)  
-- [Validação e Tratamento de Erros em APIs Node.js](https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_)  
-- [Arquitetura MVC em Node.js](https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH)  
-- [HTTP Status Codes 400 e 404 - MDN](https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/400) e (https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/404)
-
----
-
-Siga firme, você está fazendo um ótimo trabalho! 💥💻  
-Abraços do seu Code Buddy! 🤖❤️
+Um abraço e até a próxima revisão! 🤗👋
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 

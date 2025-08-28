@@ -5,7 +5,7 @@
 exports.up = function (knex) {
   return knex.schema.createTable("agentes", (table) => {
     table.increments("id").primary();
-    table.string("nome").notNullable().unique();
+    table.string("nome").notNullable();
     table.date("dataDeIncorporacao").notNullable();
     table.string("cargo").notNullable();
   });

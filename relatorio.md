@@ -1,219 +1,343 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 8 créditos restantes para usar o sistema de feedback AI.
+Você tem 9 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para AlessandroPFreitas:
 
-Nota final: **55.5/100**
+Nota final: **11.8/100**
 
-# Feedback para AlessandroPFreitas 🚓👮‍♂️
+# Feedback para AlessandroPFreitas 🚔✨
 
-Olá Alessandro! Que jornada incrível você está trilhando para construir uma API segura e profissional para o Departamento de Polícia! 🚀 Quero começar parabenizando você pelos pontos fortes do seu projeto e também ajudar a destravar os desafios que ainda ficaram pendentes. Vamos juntos? 💪
-
----
-
-## 🎉 O que você mandou muito bem!
-
-- Sua estrutura de pastas está **muito próxima** do esperado, o que é fundamental para manter o projeto organizado e escalável.
-- Os endpoints básicos de agentes e casos estão funcionando corretamente, com tratamento adequado de erros e validações — isso é ótimo!
-- Você implementou o cadastro, login, logout e exclusão de usuários, e os testes básicos dessas funcionalidades passaram, incluindo a geração correta do JWT e a validação de expiração do token.
-- Os testes bônus sobre filtragem simples de casos e agentes passaram, o que mostra que você conseguiu implementar filtros importantes.
-- O uso do Knex para manipulação do banco de dados está bem consistente e você utilizou migrations e seeds corretamente para agentes e casos.
-- A validação da senha no `authController.js` está presente e com uma regex bem robusta, garantindo requisitos de segurança.
+Olá, Alessandro! Primeiro, quero parabenizá-lo pelo esforço e pelas partes que você já conseguiu implementar no seu projeto! 🎉 Você estruturou bem a API, criou os controllers, repositories e rotas para agentes, casos e autenticação, o que é um grande passo para uma aplicação profissional. Também é ótimo ver que você já utilizou bcrypt para hash de senha, JWT para autenticação e organizou o projeto com Knex e migrations. Isso mostra que está no caminho certo para construir uma API segura e escalável!
 
 ---
 
-## ⚠️ Pontos de atenção para avançar 🚦
+## 🎯 Conquistas Bônus que você já alcançou
 
-### 1. **Rotas de autenticação incompletas e middleware de proteção ausente**
+- Implementou o endpoint de criação de usuários (`/auth/register`) com hash de senha usando bcrypt.
+- Implementou o login com validação de senha e geração de token JWT.
+- Criou repositórios separados para usuários, agentes e casos.
+- Configurou migrations para as tabelas `usuarios`, `agentes` e `casos`.
+- Implementou filtros e validações nos controllers de agentes e casos.
+- Passou testes importantes, como criação de usuário com status 201, login correto com JWT válido, logout e deleção de usuário.
+- Aplicou filtros de busca e ordenação em agentes e casos (embora alguns testes bônus falharam, a base está lá).
 
-- Você criou o arquivo `routes/authRoutes.js` com a rota para registro (`POST /auth/register`), mas não há rotas para login (`POST /auth/login`), logout ou exclusão de usuário (`DELETE /users/:id`), que são obrigatórias no desafio.
-- O `authController.js` não exporta nenhuma função (o `module.exports = {}` está vazio), e a função `register` está declarada, mas não exportada nem usada.
-- Além disso, **não há middleware de autenticação implementado** (`middlewares/authMiddleware.js` está vazio). Isso explica porque os testes que exigem proteção de rotas com JWT falharam, como:
-  - `AGENTS: Recebe status code 401 ao tentar criar agente sem token JWT`
-  - `CASES: Recebe status code 401 ao tentar criar caso sem token JWT`
-- Sem esse middleware, suas rotas `/agentes` e `/casos` não estão protegidas, o que é um requisito crítico.
+Esses pontos mostram que você já domina conceitos fundamentais e tem uma base sólida para avançar! 👏
 
-**Como resolver:**
+---
 
-- Implemente o middleware `authMiddleware.js` que:
-  - Leia o token JWT do header `Authorization: Bearer <token>`.
-  - Valide o token usando `jsonwebtoken` e o segredo da variável de ambiente `JWT_SECRET`.
-  - Caso válido, anexe os dados do usuário autenticado em `req.user`.
-  - Caso inválido ou ausente, retorne `401 Unauthorized`.
-- Aplique esse middleware nas rotas de agentes e casos.
-- Exporte as funções do `authController.js` e crie as rotas faltantes (`/auth/login`, `/auth/logout`, `/users/:id`).
-- Use `bcrypt` para hashear senhas no registro e para comparar a senha no login.
-- Gere o JWT no login com tempo de expiração.
+## 🚨 Análise dos principais erros e pontos de melhoria
 
-Exemplo básico do middleware:
+### 1. **Falhas em validação dos dados no registro de usuários (muitos testes 400 falharam)**
+
+> Testes que falharam:  
+> - Recebe erro 400 ao tentar criar um usuário com nome vazio ou nulo  
+> - Recebe erro 400 ao tentar criar um usuário com email vazio ou nulo  
+> - Recebe erro 400 ao tentar criar um usuário com senha vazia, curta demais, sem números, sem caractere especial, sem letra maiúscula ou sem letras  
+> - Recebe erro 400 ao tentar criar usuário com email já em uso  
+> - Recebe erro 400 ao tentar criar usuário com campo extra ou faltante  
+
+**Análise da causa raiz:**  
+No seu `authController.js`, a validação do registro está incompleta e pouco rigorosa. Veja seu trecho:
+
+```js
+async function register(req, res) {
+  try {
+    const { nome, email, senha } = req.body;
+    if (!nome || !email) {
+      return res.status(400).json({
+        status: 400,
+        message: "Parâmetros inválidos",
+      });
+    }
+    // ...
+}
+```
+
+Você está validando apenas se `nome` e `email` existem, mas não está validando se são strings não vazias, nem se existem campos extras no body, nem está validando o formato do email. Além disso, você não retorna erro quando campos obrigatórios estão faltando ou quando existem campos extras inesperados.
+
+Também faltou retornar **status 201 CREATED** para criação bem-sucedida (você retornou 200). Além disso, você não está aguardando a inserção do usuário no banco, pois:
+
+```js
+usuariosRepository.newUsuario(usuario);
+```
+
+Está faltando o `await` aqui! Isso pode causar problemas na criação do usuário.
+
+**Correção recomendada:**
+
+- Valide todos os campos obrigatórios, garantindo que não estejam vazios ou nulos.
+- Valide o formato do email.
+- Valide se existem campos extras no `req.body` e retorne erro 400 se houver.
+- Use `await` ao chamar o método que insere o usuário no banco.
+- Retorne status code 201 ao criar usuário.
+- Ajuste a resposta para retornar apenas o objeto esperado (não inclua a senha na resposta).
+
+Exemplo de validação mais completa:
+
+```js
+async function register(req, res) {
+  try {
+    const { nome, email, senha, ...extras } = req.body;
+
+    // Verifica campos extras
+    if (Object.keys(extras).length > 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "Campos extras não permitidos",
+      });
+    }
+
+    // Valida nome e email
+    if (!nome || typeof nome !== "string" || nome.trim() === "") {
+      return res.status(400).json({
+        status: 400,
+        message: "O campo 'nome' é obrigatório e não pode ser vazio",
+      });
+    }
+    if (!email || typeof email !== "string" || email.trim() === "") {
+      return res.status(400).json({
+        status: 400,
+        message: "O campo 'email' é obrigatório e não pode ser vazio",
+      });
+    }
+    // Valida formato do email (regex simples)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        status: 400,
+        message: "Formato de email inválido",
+      });
+    }
+
+    // Verifica se email já existe
+    const emailExistente = await usuariosRepository.buscarPorEmail(email);
+    if (emailExistente) {
+      return res.status(400).json({
+        status: 400,
+        message: "O email está em uso!",
+      });
+    }
+
+    // Valida senha
+    if (!senha || !validarSenha(senha)) {
+      return res.status(400).json({
+        status: 400,
+        message:
+          "A senha não atende aos requisitos de segurança. Ela deve ter pelo menos 8 caracteres, incluindo uma letra minúscula, uma maiúscula, um número e um caractere especial.",
+      });
+    }
+
+    const saltRounds = parseInt(process.env.SALT_ROUNDS) || 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashed = await bcrypt.hash(senha, salt);
+
+    const usuario = {
+      nome: nome.trim(),
+      email: email.trim(),
+      senha: hashed,
+    };
+
+    const [novoUsuario] = await usuariosRepository.newUsuario(usuario);
+
+    return res.status(201).json({
+      id: novoUsuario.id,
+      nome: novoUsuario.nome,
+      email: novoUsuario.email,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: 500,
+      message: "Erro interno do servidor.",
+    });
+  }
+}
+```
+
+---
+
+### 2. **Resposta do login e token JWT**
+
+Você está retornando o token na propriedade `token`:
+
+```js
+return res.status(200).json({
+  status: 200,
+  message: "Login realizado com sucesso!",
+  token,
+});
+```
+
+Mas o teste espera que o token venha no campo `acess_token` (com "c" e "e" invertidos na palavra "access", provavelmente um detalhe do enunciado):
+
+```json
+{
+  "acess_token": "token aqui"
+}
+```
+
+Além disso, no payload do token você usa `name` (que não existe no usuário, pois no banco o campo é `nome`) e no token você usa `user.name`:
+
+```js
+const token = jwt.sign(
+  { id: user.id, name: user.name, email: user.email },
+  process.env.JWT_SECRET,
+  {
+    expiresIn: "1d",
+  }
+);
+```
+
+Isso pode gerar `undefined` no campo `name` do token. Use `nome` em vez de `name` para manter consistência com o banco:
+
+```js
+const token = jwt.sign(
+  { id: user.id, nome: user.nome, email: user.email },
+  process.env.JWT_SECRET,
+  {
+    expiresIn: "1d",
+  }
+);
+```
+
+Também sugiro remover a propriedade `status` e `message` do retorno do login, pois o teste espera só o token no formato correto.
+
+Exemplo do retorno esperado:
+
+```js
+return res.status(200).json({
+  acess_token: token,
+});
+```
+
+---
+
+### 3. **Middleware de autenticação vazio**
+
+Você tem o arquivo `middlewares/authMiddleware.js` mas está vazio:
 
 ```js
 // middlewares/authMiddleware.js
-const jwt = require('jsonwebtoken');
+```
+
+O enunciado pede que você crie um middleware que:
+
+- Leia o header `Authorization: Bearer <token>`
+- Valide o JWT
+- Adicione os dados do usuário autenticado em `req.user`
+- Caso o token seja inválido ou ausente, retorne status 401
+
+Sem esse middleware, as rotas `/agentes` e `/casos` não estão protegidas, o que causa falhas nos testes que esperam status 401 quando não há token.
+
+**Exemplo de middleware de autenticação:**
+
+```js
+const jwt = require("jsonwebtoken");
 
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Token não fornecido' });
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      status: 401,
+      message: "Token não fornecido ou formato inválido",
+    });
   }
-  const token = authHeader.split(' ')[1];
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload; // pode conter id, email, etc
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Dados do usuário no token
     next();
-  } catch (err) {
-    return res.status(401).json({ message: 'Token inválido' });
+  } catch (error) {
+    return res.status(401).json({
+      status: 401,
+      message: "Token inválido",
+    });
   }
 }
 
 module.exports = authMiddleware;
 ```
 
----
-
-### 2. **Validação e tratamento incompletos no registro de usuários**
-
-- No seu `authController.js`, a função `register` está definida, mas não exportada nem usada nas rotas.
-- Você chama `usuariosRepository.buscarPorEmail(email)` mas não aguarda o resultado com `await`, o que faz o código não funcionar corretamente.
-- Ao verificar se o email já existe, você não aguarda a Promise, então a verificação sempre será verdadeira (pois uma Promise é truthy), e o teste de "email já em uso" pode falhar.
-- Você não está validando se o campo `senha` está vazio ou nulo antes de aplicar a regex, o que pode causar erros.
-- Também não faz validação se há campos extras no corpo da requisição, nem se todos os campos obrigatórios estão presentes (nome, email, senha).
-- O status code para criação de usuário deve ser **201 Created**, mas você está retornando 200.
-
-**Como melhorar:**
-
-- Use `await` para chamadas assíncronas, como a busca por email.
-- Valide todos os campos obrigatórios, retornando erro 400 com mensagens claras.
-- Valide se há campos extras não permitidos.
-- Hasheie a senha com `bcrypt` antes de salvar.
-- Retorne status 201 e o objeto do usuário criado (sem a senha).
-- Exporte a função `register` e use-a na rota `POST /auth/register`.
-- Implemente também as funções `login`, `logout` e `deleteUser`.
-
-Exemplo corrigido do trecho de verificação de email:
+Depois, aplique esse middleware nas rotas protegidas, por exemplo em `server.js`:
 
 ```js
-const emailExistente = await usuariosRepository.buscarPorEmail(email);
-if (emailExistente) {
-  return res.status(400).json({
-    status: 400,
-    message: "O email está em uso!",
-  });
-}
+const authMiddleware = require("./middlewares/authMiddleware");
+
+app.use('/agentes', authMiddleware, agentesRouter);
+app.use('/casos', authMiddleware, casosRouter);
 ```
 
 ---
 
-### 3. **Repositório de usuários incompleto**
+### 4. **Status codes e respostas inconsistentes**
 
-- No `usuariosRepository.js`, você exporta apenas `buscarPorEmail`, mas não exporta a função `newUsuario`, que você usa no controller.
-- Além disso, `newUsuario` não está usando `await` no insert, o que pode gerar problemas.
-- Isso pode causar erros silenciosos e falhas nos testes que criam usuários.
-
-**Como ajustar:**
-
-- Exporte todas as funções que você criou:
-
-```js
-async function buscarPorEmail(email) {
-  return await knex('usuarios').where({email}).first();
-}
-
-async function newUsuario(usuario) {
-  const [insert] = await knex('usuarios').insert(usuario).returning("*");
-  return insert;
-}
-
-module.exports = {
-  buscarPorEmail,
-  newUsuario,
-};
-```
+- Na criação de usuário, você retornou status 200, mas o correto é 201 (Created).
+- Na exclusão de agente e caso, você retorna status 204 com corpo vazio, o que está correto.
+- No login, você retorna status 400 para credenciais inválidas, mas em um caso você retornou `status: 200` dentro do JSON, o que confunde. O status HTTP deve ser 400 mesmo.
 
 ---
 
-### 4. **Falta de documentação no arquivo INSTRUCTIONS.md**
+### 5. **Documentação ausente**
 
-- O arquivo `INSTRUCTIONS.md` está vazio.
-- O desafio exige que você documente como registrar, logar, enviar o token JWT no header e explique o fluxo de autenticação.
-- Isso é importante para o uso correto da API e para o entendimento dos avaliadores.
+O arquivo `INSTRUCTIONS.md` está vazio, mas o enunciado pede que você documente:
 
-**Sugestão:**
+- Como registrar e logar usuários
+- Exemplo de envio do token JWT no header Authorization
+- Fluxo de autenticação esperado
 
-- Documente pelo menos:
-  - Como fazer `POST /auth/register` (exemplo de payload).
-  - Como fazer `POST /auth/login` e receber o token.
-  - Como enviar o token no header `Authorization: Bearer <token>`.
-  - Quais rotas estão protegidas.
-  - Como fazer logout e exclusão de usuário.
+Essa documentação é fundamental para que outros desenvolvedores ou testadores saibam como usar sua API.
 
 ---
 
-### 5. **Estrutura e organização**
+### 6. **Outros detalhes**
 
-- Você está quase lá com a estrutura, mas:
-  - O arquivo `authController.js` não exporta nada.
-  - O arquivo `authRoutes.js` tem apenas a rota de registro, faltando as demais.
-  - O middleware de autenticação está vazio.
-- Essas ausências impactam diretamente a segurança e o funcionamento esperado.
+- No migration de agentes, você colocou `nome` como único, o que pode ser um problema em alguns casos (nomes repetidos?). Confirme se isso é desejado.
+- No seed de agentes, você apaga os casos antes dos agentes, o que está correto devido à chave estrangeira.
+- Em `authController`, no logout e exclusão de usuário, não vi implementações (apesar do enunciado pedir). Talvez isso impacte testes futuros.
 
 ---
 
-## 📋 Análise detalhada dos testes que falharam e suas causas
+## 📚 Recursos que recomendo para você:
 
-| Teste que Falhou | Possível causa no código |
-|-|-|
-| USERS: Recebe erro 400 ao tentar criar um usuário com nome vazio/nulo, email vazio/nulo, senha inválida, etc | Validações incompletas no `authController.js` e falta de await no `buscarPorEmail`. Falta de checagem de campos extras e campo faltantes. |
-| USERS: Recebe erro 400 ao tentar criar um usuário com e-mail já em uso | Falta de `await` ao buscar email existente, fazendo a checagem falhar. |
-| USERS: Recebe erro 400 ao tentar criar usuário com campo extra/faltante | Falta de validação rigorosa dos campos recebidos no corpo da requisição. |
-| AGENTS: Recebe status code 401 ao tentar criar/consultar/atualizar/deletar agente sem token JWT | Middleware de autenticação não implementado/aplicado. |
-| CASES: Recebe status code 401 ao tentar criar/listar/atualizar/deletar caso sem token JWT | Middleware de autenticação não implementado/aplicado. |
-| USERS: Logout e exclusão de usuário não testados porque rotas não implementadas | Rotas `/auth/logout` e `/users/:id` inexistentes. |
-| Bonus: `/usuarios/me` não implementado | Endpoint não criado. |
-| Bonus: Falta de mensagens de erro customizadas para argumentos inválidos | Pode ser aprimorado com mensagens mais específicas. |
-
----
-
-## 💡 Recomendações de aprendizado para você
-
-- Para entender melhor **autenticação JWT e uso do bcrypt**, recomendo fortemente este vídeo, feito pelos meus criadores, que explica os conceitos básicos e a implementação prática:  
-  🔗 https://www.youtube.com/watch?v=L04Ln97AwoY
-- Para aprofundar o uso do **JWT especificamente**, este vídeo é excelente:  
-  🔗 https://www.youtube.com/watch?v=keS0JWOypIU
-- Para aprimorar a estrutura do seu projeto e seguir boas práticas MVC, veja este conteúdo:  
-  🔗 https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s
-- Se você quiser revisar a configuração do banco e Knex, aqui está um guia muito bom:  
-  🔗 https://www.youtube.com/watch?v=dXWy_aGCW1E
+- Sobre autenticação, bcrypt e JWT:  
+  [Esse vídeo, feito pelos meus criadores, fala muito bem sobre autenticação, JWT e bcrypt na prática](https://www.youtube.com/watch?v=L04Ln97AwoY)  
+  Também recomendo: [JWT na prática](https://www.youtube.com/watch?v=keS0JWOypIU)  
+- Para organizar seu código usando MVC e boas práticas:  
+  [Arquitetura MVC para Node.js](https://www.youtube.com/watch?v=bGN_xNc4A1k&t=3s)  
+- Sobre validação de dados e segurança:  
+  [Conceitos básicos e fundamentais da cibersegurança](https://www.youtube.com/watch?v=Q4LQOfYwujk)  
+- Sobre configuração e uso do Knex com migrations e seeds:  
+  [Configuração de Banco de Dados com Docker e Knex](https://www.youtube.com/watch?v=uEABDBQV-Ek&t=1s)  
+  [Documentação oficial do Knex.js sobre migrations](https://www.youtube.com/watch?v=dXWy_aGCW1E)  
 
 ---
 
-## 🎯 Resumo dos principais pontos para focar e melhorar
+## 📝 Resumo rápido dos principais pontos para melhorar
 
-- [ ] **Implementar e exportar todas as funções do `authController.js`**: registro, login, logout, exclusão.
-- [ ] **Corrigir o uso do `await` em chamadas assíncronas**, especialmente para verificar email existente.
-- [ ] **Implementar middleware de autenticação JWT (`authMiddleware.js`)** e aplicá-lo nas rotas protegidas `/agentes` e `/casos`.
-- [ ] **Criar as rotas faltantes de autenticação** (`/auth/login`, `/auth/logout`, `/users/:id`).
-- [ ] **Hashear senhas com bcrypt no registro e comparar no login**.
-- [ ] **Retornar status HTTP corretos** (ex: 201 para criação, 400 para erros de validação, 401 para não autorizado).
-- [ ] **Documentar no `INSTRUCTIONS.md` o fluxo de autenticação e uso do token JWT**.
-- [ ] **Exportar todas as funções do `usuariosRepository.js`** e garantir uso correto.
-- [ ] **Validar campos extras e ausentes no corpo das requisições para usuários**.
-- [ ] **Implementar o endpoint `/usuarios/me` para retornar dados do usuário autenticado (bônus)**.
+- **Validação rigorosa dos dados no registro de usuários:** campos obrigatórios, formatos, campos extras, uso correto de `await` e status code 201.
+- **Ajustar retorno do login para enviar `acess_token` no formato esperado e corrigir o payload do token.**
+- **Implementar e aplicar o middleware de autenticação JWT para proteger as rotas de agentes e casos.**
+- **Corrigir inconsistências nos status codes e mensagens de erro, garantindo que o HTTP status e o JSON estejam alinhados.**
+- **Preencher o arquivo `INSTRUCTIONS.md` com documentação clara sobre autenticação e uso da API.**
+- **Implementar endpoints de logout e exclusão de usuário conforme enunciado (para completar requisitos).**
 
 ---
 
-## 🚀 Finalizando
+## Finalizando 🚀
 
-Alessandro, você está no caminho certo! A base do seu projeto está muito boa, e com os ajustes que discutimos você vai conseguir entregar uma API segura, profissional e completa. Segurança e autenticação são temas desafiadores, mas com calma e prática você dominará rapidinho!  
+Alessandro, você já tem uma base muito boa! A estrutura do seu projeto está organizada e o uso de bcrypt, JWT, Knex e Express está bem encaminhado. O que está faltando são detalhes essenciais de validação, segurança e documentação para sua API ficar realmente pronta para produção e passar em todos os testes.
 
-Continue focado, revisando os pontos que destaquei, e não hesite em buscar os vídeos que recomendei para consolidar seu aprendizado. Estou torcendo muito pelo seu sucesso e aqui para o que precisar! 💙
+Não desanime! Corrigindo esses pontos, você vai destravar uma nota muito melhor e uma aplicação muito mais segura e robusta. Continue praticando essas boas práticas e revisando seu código com atenção. Estou aqui para ajudar sempre que precisar! 💪😉
 
-Um grande abraço e até a próxima revisão! 👊✨
+Boa codificação! 👊✨
 
 ---
 
-Se quiser, posso te ajudar a começar a implementar o middleware de autenticação ou as rotas de login/logout. Quer?
+Se quiser, posso ajudar a montar o middleware de autenticação e melhorar o controller de auth juntos. Quer? 😊
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 

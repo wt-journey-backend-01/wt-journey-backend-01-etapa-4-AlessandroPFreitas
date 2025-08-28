@@ -1,15 +1,19 @@
-const knex = require('../db/db');
+const knex = require("../db/db");
 
 async function buscarPorEmail(email) {
-    return await knex('usuarios').where({email}).first();
+  return await knex("usuarios").where({ email }).first();
 }
 
 async function newUsuario(usuario) {
-    const [insert] = await knex('usuarios').insert(usuario).returning("*");
+  return await knex("usuarios").insert(usuario).returning("*");
+}
 
-    return insert;
+async function deleteUsuario(id) {
+  return await knex("usuarios").where({ id }).del();
 }
 
 module.exports = {
-buscarPorEmail
+  buscarPorEmail,
+  newUsuario,
+  deleteUsuario
 };

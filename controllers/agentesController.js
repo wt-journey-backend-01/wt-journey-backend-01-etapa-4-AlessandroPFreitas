@@ -20,7 +20,7 @@ async function getAllAgentes(req, res) {
     }
 
     if (sort === "dataDeIncorporacao") {
-       agentes = agentes.sort(
+      agentes = agentes.sort(
         (a, b) =>
           new Date(a.dataDeIncorporacao) - new Date(b.dataDeIncorporacao)
       );
@@ -43,7 +43,6 @@ async function getAllAgentes(req, res) {
 async function getAgenteId(req, res) {
   try {
     const { id } = req.params;
-
 
     const agenteId = await agentesRepository.findId(id);
 
@@ -81,7 +80,8 @@ async function postAgente(req, res) {
         const data = new Date(dataDeIncorporacao);
         const hoje = new Date();
         if (data > hoje) {
-          errors.dataDeIncorporacao = "A data de incorporação não pode ser no futuro";
+          errors.dataDeIncorporacao =
+            "A data de incorporação não pode ser no futuro";
         }
       }
     }
@@ -129,7 +129,8 @@ async function putAgente(req, res) {
         const data = new Date(dataDeIncorporacao);
         const hoje = new Date();
         if (data > hoje) {
-          errors.dataDeIncorporacao = "A data de incorporação não pode ser no futuro";
+          errors.dataDeIncorporacao =
+            "A data de incorporação não pode ser no futuro";
         }
       }
     }
@@ -167,7 +168,7 @@ async function putAgente(req, res) {
   }
 }
 
- async function patchAgente(req, res) {
+async function patchAgente(req, res) {
   try {
     const { id } = req.params;
     const { nome, dataDeIncorporacao, cargo } = req.body;
@@ -188,7 +189,8 @@ async function putAgente(req, res) {
         const data = new Date(dataDeIncorporacao);
         const hoje = new Date();
         if (data > hoje) {
-          errors.dataDeIncorporacao = "A data de incorporação não pode ser no futuro";
+          errors.dataDeIncorporacao =
+            "A data de incorporação não pode ser no futuro";
         } else {
           agente.dataDeIncorporacao = dataDeIncorporacao;
         }

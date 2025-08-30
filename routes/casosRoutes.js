@@ -1,8 +1,9 @@
 const express = require('express')
 const router = express.Router();
 const casosController = require('../controllers/casosController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-router.get('/', casosController.getAllCasos);
+router.get('/', authMiddleware, casosController.getAllCasos);
 router.get('/:id', casosController.getCasoId);
 
 router.post('/', casosController.postCaso);

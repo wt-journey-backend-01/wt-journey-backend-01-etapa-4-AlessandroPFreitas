@@ -12,6 +12,7 @@ async function deleteUsuario(id) {
   return await knex("usuarios").where({ id }).del();
 }
 
+
 module.exports = {
   buscarPorEmail,
   newUsuario,

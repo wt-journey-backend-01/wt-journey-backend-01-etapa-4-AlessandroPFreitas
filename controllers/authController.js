@@ -108,7 +108,7 @@ async function login(req, res) {
     );
 
     return res.status(200).json({
-      acess_token: token,
+     access_token: token,
     });
   } catch (error) {
     console.log(error);
@@ -119,7 +119,36 @@ async function login(req, res) {
   }
 }
 
+async function del(req, res) {
+  try {
+    const { id } = req.params;
+
+    const userDelete = await usuariosRepository.deleteUsuario(id);
+
+    if (!userDelete) {
+      return res.status(400).json({
+        status: 400,
+        message: "Usuario não existe!",
+      });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Erro interno do servidor.",
+    });
+  }
+}
+
+function logout(req, res) {
+  return res.status(200).json({ message: "Logout realizado com sucesso." });
+}
+
+
 module.exports = {
   register,
   login,
+  del,
+  logout
 };

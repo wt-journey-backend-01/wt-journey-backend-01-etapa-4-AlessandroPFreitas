@@ -1,7 +1,6 @@
 const casosRepository = require("../repositories/casosRepository");
 const agentesRepository = require("../repositories/agentesRepository");
 
-
 async function getAllCasos(req, res) {
   try {
     const { agente_id, status, q } = req.query;
@@ -17,7 +16,9 @@ async function getAllCasos(req, res) {
           },
         });
       }
-      casos = casos.filter((caso) => String(caso.agente_id) === String(agente_id));
+      casos = casos.filter(
+        (caso) => String(caso.agente_id) === String(agente_id)
+      );
     }
 
     if (status) {
@@ -50,7 +51,7 @@ async function getAllCasos(req, res) {
           status: 400,
           message: "Parâmetros inválidos",
           errors: {
-            q: "O termo de busca deve ter pelo menos 2 caracteres!"
+            q: "O termo de busca deve ter pelo menos 2 caracteres!",
           },
         });
       }
@@ -73,7 +74,13 @@ async function getAllCasos(req, res) {
 
 async function getCasoId(req, res) {
   try {
-    const id = req.params.id;
+    const id = Number(req.params.id);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "ID inválido",
+      });
+    }
     const caso = await casosRepository.findById(id);
     if (!caso) {
       return res.status(404).json({
@@ -82,7 +89,7 @@ async function getCasoId(req, res) {
       });
     }
 
-  res.status(200).json(caso);
+    res.status(200).json(caso);
   } catch (error) {
     res.status(500).json({
       status: 500,
@@ -106,7 +113,7 @@ async function postCaso(req, res) {
     }
     if (!agente_id) {
       errors.agente_id = "O campo 'agente_id' é obrigatório";
-    } 
+    }
 
     if (Object.keys(errors).length > 0) {
       return res.status(400).json({
@@ -142,7 +149,13 @@ async function postCaso(req, res) {
 
 async function putCaso(req, res) {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "ID inválido",
+      });
+    }
     const { titulo, descricao, status, agente_id } = req.body;
     const errors = {};
 
@@ -156,7 +169,7 @@ async function putCaso(req, res) {
     }
     if (!agente_id) {
       errors.agente_id = "O campo 'agente_id' é obrigatório";
-    } 
+    }
 
     if (Object.keys(errors).length > 0) {
       return res.status(400).json({
@@ -198,10 +211,16 @@ async function putCaso(req, res) {
     });
   }
 }
- 
+
 async function patchCaso(req, res) {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "ID inválido",
+      });
+    }
     const { titulo, descricao, status, agente_id } = req.body;
     const errors = {};
 
@@ -242,7 +261,10 @@ async function patchCaso(req, res) {
       });
     }
 
-    const casoAtualizado = await casosRepository.partialCaso(id, dadosParaAtualizar);
+    const casoAtualizado = await casosRepository.partialCaso(
+      id,
+      dadosParaAtualizar
+    );
 
     if (!casoAtualizado) {
       return res.status(404).json({
@@ -262,7 +284,13 @@ async function patchCaso(req, res) {
 
 async function deleteCaso(req, res) {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "ID inválido",
+      });
+    }
 
     const casoDeletado = await casosRepository.removeCaso(id);
     if (!casoDeletado) {

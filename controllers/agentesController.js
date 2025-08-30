@@ -42,7 +42,13 @@ async function getAllAgentes(req, res) {
 
 async function getAgenteId(req, res) {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "ID inválido",
+      });
+    }
 
     const agenteId = await agentesRepository.findId(id);
 
@@ -112,7 +118,13 @@ async function postAgente(req, res) {
 
 async function putAgente(req, res) {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "ID inválido",
+      });
+    }
     const { nome, dataDeIncorporacao, cargo } = req.body;
     const errors = {};
 
@@ -170,7 +182,13 @@ async function putAgente(req, res) {
 
 async function patchAgente(req, res) {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "ID inválido",
+      });
+    }
     const { nome, dataDeIncorporacao, cargo } = req.body;
     const errors = {};
 
@@ -185,7 +203,6 @@ async function patchAgente(req, res) {
         errors.dataDeIncorporacao =
           "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD'";
       } else {
-        // Validar que não é data futura
         const data = new Date(dataDeIncorporacao);
         const hoje = new Date();
         if (data > hoje) {
@@ -235,7 +252,13 @@ async function patchAgente(req, res) {
 
 async function deleteAgente(req, res) {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "ID inválido",
+      });
+    }
 
     const agente = await agentesRepository.removeAgente(id);
     if (!agente) {

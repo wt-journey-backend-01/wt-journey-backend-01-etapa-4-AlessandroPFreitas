@@ -1,7 +1,25 @@
 const knex = require("../db/db");
 
-async function findAll() {
-  return await knex("casos").select("*");
+async function findAll(filters = {}) {
+  const query = knex("casos");
+
+  if (filters.agente_id) {
+    query.where("agente_id", filters.agente_id);
+  }
+  if (filters.status) {
+    query.where("status", filters.status);
+  }
+  if (filters.q) {
+    query.where(function () {
+      this.where("titulo", "ilike", `%${filters.q}%`).orWhere(
+        "descricao",
+        "ilike",
+        `%${filters.q}%`
+      );
+    });
+  }
+
+  return await query.select("*");
 }
 
 async function findById(id) {
@@ -13,7 +31,11 @@ async function newCaso(caso) {
   if (Array.isArray(inserted) && inserted.length > 0) return inserted[0];
 
   return await knex("casos")
-    .where({ titulo: caso.titulo, descricao: caso.descricao, agente_id: caso.agente_id })
+    .where({
+      titulo: caso.titulo,
+      descricao: caso.descricao,
+      agente_id: caso.agente_id,
+    })
     .orderBy("id", "desc")
     .first();
 }
